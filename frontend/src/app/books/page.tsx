@@ -4,20 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser, logout } from '@/utils/auth';
 
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  description?: string;
-  coverUrl?: string;
-  genres?: string[];
-  averageRating?: number;
-  publishedYear?: number;
-  addedToShelf?: boolean;
-  shelfStatus?: string;
-}
+import { Book, User } from '@/types';
 
-interface PaginatedBooks {
+interface BooksResponse {
   books: Book[];
   total: number;
   page: number;
@@ -31,7 +20,7 @@ export default function Books() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBooks, setTotalBooks] = useState(0);
@@ -62,9 +51,9 @@ export default function Books() {
         const target = event.target as Element;
         const dropdownContainer = document.querySelector(`[data-dropdown="${showStatusDropdown}"]`);
         const buttonContainer = document.querySelector(`[data-button="${showStatusDropdown}"]`);
-        
-        if (dropdownContainer && !dropdownContainer.contains(target) && 
-            buttonContainer && !buttonContainer.contains(target)) {
+
+        if (dropdownContainer && !dropdownContainer.contains(target) &&
+          buttonContainer && !buttonContainer.contains(target)) {
           setShowStatusDropdown(null);
         }
       }
@@ -80,7 +69,7 @@ export default function Books() {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get(`/books?page=${pageNum}&limit=${PAGE_SIZE}`);
+      const response = await api.get<BooksResponse>(`/books?page=${pageNum}&limit=${PAGE_SIZE}`);
       setBooks(response.data.books);
       setTotalPages(response.data.pages);
       setTotalBooks(response.data.total);
@@ -115,9 +104,9 @@ export default function Books() {
       await fetchBooks(page);
 
       setError('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Add to shelf error:', error);
-      setError(error.response?.data?.message || 'Failed to add book to shelf.');
+      setError((error as any).response?.data?.message || 'Failed to add book to shelf.');
     } finally {
       setAddingToShelf(null);
     }
@@ -152,7 +141,7 @@ export default function Books() {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -170,7 +159,7 @@ export default function Books() {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -272,13 +261,13 @@ export default function Books() {
 
       <main style={{ padding: '2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             marginBottom: '3rem',
             color: 'white'
           }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
+            <h1 style={{
+              fontSize: '2.5rem',
               marginBottom: '1rem',
               fontWeight: 'bold'
             }}>
@@ -290,7 +279,7 @@ export default function Books() {
           </div>
 
           {/* Search Bar */}
-          <div style={{ 
+          <div style={{
             marginBottom: '2rem',
             display: 'flex',
             justifyContent: 'center'
@@ -336,7 +325,7 @@ export default function Books() {
                 {searchTerm ? 'No books found' : 'No books available'}
               </h2>
               <p style={{ opacity: 0.8 }}>
-                {searchTerm 
+                {searchTerm
                   ? 'Try adjusting your search terms'
                   : 'Check back later for new books!'
                 }
@@ -372,7 +361,7 @@ export default function Books() {
                     }}>
                       {book.coverUrl ? '' : '📖'}
                     </div>
-                    
+
                     <h3 style={{
                       fontSize: '1.25rem',
                       marginBottom: '0.5rem',
@@ -381,7 +370,7 @@ export default function Books() {
                     }}>
                       {book.title}
                     </h3>
-                    
+
                     <p style={{
                       color: '#666',
                       marginBottom: '1rem',
@@ -389,7 +378,7 @@ export default function Books() {
                     }}>
                       by {book.author}
                     </p>
-                    
+
                     {book.description && (
                       <p style={{
                         color: '#555',
@@ -397,13 +386,13 @@ export default function Books() {
                         lineHeight: '1.5',
                         marginBottom: '1rem'
                       }}>
-                        {book.description.length > 100 
+                        {book.description.length > 100
                           ? `${book.description.substring(0, 100)}...`
                           : book.description
                         }
                       </p>
                     )}
-                    
+
                     {book.genres && book.genres.length > 0 && (
                       <div style={{ marginBottom: '1rem' }}>
                         {book.genres.slice(0, 3).map((genre, index) => (
@@ -420,7 +409,7 @@ export default function Books() {
                         ))}
                       </div>
                     )}
-                    
+
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -465,7 +454,7 @@ export default function Books() {
                               {addingToShelf === book._id ? 'Adding...' : 'Add to Shelf'}
                             </button>
                             {showStatusDropdown === book._id && (
-                              <div 
+                              <div
                                 data-dropdown={book._id}
                                 style={{
                                   position: 'absolute',

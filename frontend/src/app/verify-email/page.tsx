@@ -54,10 +54,10 @@ export default function VerifyEmail() {
 			const res = await api.post('/users/verify-email', { verificationCode });
 			setAuth(res.data.token, res.data.user);
 			router.push('/books');
-		} catch (err: any) {
-			if (err.response) {
-				setError(err.response.data.message || "Invalid code. Try again.");
-			} else if (err.request) {
+		} catch (err: unknown) {
+			if ((err as any).response) {
+				setError((err as any).response?.data?.message || 'Verification failed');
+			} else if ((err as any).request) {
 				setError("No response from server. Check your connection.");
 			} else {
 				setError("Unexpected error occurred.");

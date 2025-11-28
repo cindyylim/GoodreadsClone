@@ -28,21 +28,21 @@ export default function Login() {
 
     try {
       const response = await api.post('/users/login', formData);
-      
+
       // Store the token and user data using the auth utility
       setAuth(response.data.token, response.data.user);
-      
+
       // Redirect to books page
       router.push('/books');
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Login failed. Please try again.');
+    } catch (error: unknown) {
+      setError((error as any).response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       display: 'flex',
@@ -60,8 +60,8 @@ export default function Login() {
         maxWidth: '400px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ 
-            fontSize: '2rem', 
+          <h1 style={{
+            fontSize: '2rem',
             marginBottom: '0.5rem',
             color: '#333'
           }}>
@@ -141,14 +141,14 @@ export default function Login() {
               placeholder="Enter your password"
             />
             <p style={{ color: '#666', margin: 0 }}>
-            <Link href="/forgot-password" style={{
-              color: '#667eea',
-              textDecoration: 'none',
-              fontWeight: '500'
-            }}>
-              Forgot Password?
-            </Link>
-          </p>
+              <Link href="/forgot-password" style={{
+                color: '#667eea',
+                textDecoration: 'none',
+                fontWeight: '500'
+              }}>
+                Forgot Password?
+              </Link>
+            </p>
           </div>
 
           <button
@@ -171,8 +171,8 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '2rem',
           paddingTop: '2rem',
           borderTop: '1px solid #eee'
@@ -189,8 +189,8 @@ export default function Login() {
           </p>
         </div>
 
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '1rem'
         }}>
           <Link href="/" style={{

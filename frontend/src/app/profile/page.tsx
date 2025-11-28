@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { User } from '@/types';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,14 +44,14 @@ export default function ProfilePage() {
       const response = await api.put('/users/profile', formData);
       setUser(response.data);
       setSuccess('Profile updated successfully!');
-      
+
       // Update localStorage
       const token = localStorage.getItem('token');
       if (token) {
         localStorage.setItem('user', JSON.stringify(response.data));
       }
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to update profile');
+    } catch (error: unknown) {
+      setError((error as any).response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -65,7 +66,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -83,7 +84,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -99,17 +100,17 @@ export default function ProfilePage() {
 
       <main style={{ padding: '2rem' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ 
-            background: 'white', 
-            borderRadius: '1rem', 
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
             padding: '2rem',
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
           }}>
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div style={{ 
-                width: 120, 
-                height: 120, 
-                borderRadius: '50%', 
+              <div style={{
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
                 background: formData.avatar ? `url(${formData.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 margin: '0 auto 1rem',
                 display: 'flex',
@@ -131,11 +132,11 @@ export default function ProfilePage() {
             </div>
 
             {error && (
-              <div style={{ 
-                background: '#fee', 
-                color: '#c33', 
-                padding: '1rem', 
-                borderRadius: '0.5rem', 
+              <div style={{
+                background: '#fee',
+                color: '#c33',
+                padding: '1rem',
+                borderRadius: '0.5rem',
                 marginBottom: '1rem',
                 border: '1px solid #fcc'
               }}>
@@ -144,11 +145,11 @@ export default function ProfilePage() {
             )}
 
             {success && (
-              <div style={{ 
-                background: '#efe', 
-                color: '#3c3', 
-                padding: '1rem', 
-                borderRadius: '0.5rem', 
+              <div style={{
+                background: '#efe',
+                color: '#3c3',
+                padding: '1rem',
+                borderRadius: '0.5rem',
                 marginBottom: '1rem',
                 border: '1px solid #cfc'
               }}>
@@ -265,8 +266,8 @@ export default function ProfilePage() {
               </button>
             </form>
 
-            <div style={{ 
-              textAlign: 'center', 
+            <div style={{
+              textAlign: 'center',
               marginTop: '2rem',
               paddingTop: '2rem',
               borderTop: '1px solid #eee'

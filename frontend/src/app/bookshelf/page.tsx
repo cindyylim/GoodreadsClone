@@ -3,17 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser, logout } from '@/utils/auth';
+import { Book, User } from '@/types';
 
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  description?: string;
-  coverUrl?: string;
-  genres?: string[];
-  averageRating?: number;
-  publishedYear?: number;
-}
+
 
 interface BookshelfItem {
   _id: string;
@@ -28,12 +20,12 @@ export default function Bookshelf() {
   const [bookshelf, setBookshelf] = useState<BookshelfItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const currentUser = getUser();
     setUser(currentUser);
-    
+
     if (currentUser) {
       fetchBookshelf();
     } else {
@@ -47,8 +39,8 @@ export default function Bookshelf() {
     try {
       const response = await api.get(`/users/${getUser()._id}/bookshelf`);
       setBookshelf(response.data);
-    } catch (error: any) {
-      if (error.response?.status === 401) {
+    } catch (error: unknown) {
+      if ((error as any).response?.status === 401) {
         setError('Please log in to view your bookshelf.');
       } else {
         setError('Failed to load your bookshelf. Please try again.');
@@ -67,7 +59,7 @@ export default function Bookshelf() {
     try {
       await api.delete(`/users/bookshelf/${bookshelfId}`);
       setBookshelf(prev => prev.filter(item => item._id !== bookshelfId));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to remove book from shelf.');
     }
   };
@@ -75,14 +67,14 @@ export default function Bookshelf() {
   const handleUpdateStatus = async (bookshelfId: string, newStatus: string) => {
     try {
       await api.put(`/users/bookshelf/${bookshelfId}`, { status: newStatus });
-      setBookshelf(prev => 
-        prev.map(item => 
-          item._id === bookshelfId 
+      setBookshelf(prev =>
+        prev.map(item =>
+          item._id === bookshelfId
             ? { ...item, status: newStatus }
             : item
         )
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to update book status.');
     }
   };
@@ -111,7 +103,7 @@ export default function Bookshelf() {
 
   if (!user) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -143,7 +135,7 @@ export default function Bookshelf() {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -165,7 +157,7 @@ export default function Bookshelf() {
   const read = getBooksByStatus('read');
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -220,13 +212,13 @@ export default function Bookshelf() {
 
       <main style={{ padding: '2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             marginBottom: '3rem',
             color: 'white'
           }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
+            <h1 style={{
+              fontSize: '2.5rem',
               marginBottom: '1rem',
               fontWeight: 'bold'
             }}>
@@ -277,8 +269,8 @@ export default function Bookshelf() {
               {/* Currently Reading */}
               {currentlyReading.length > 0 && (
                 <div>
-                  <h2 style={{ 
-                    color: 'white', 
+                  <h2 style={{
+                    color: 'white',
                     marginBottom: '1rem',
                     fontSize: '1.5rem',
                     fontWeight: 'bold'
@@ -291,7 +283,7 @@ export default function Bookshelf() {
                     gap: '1rem'
                   }}>
                     {currentlyReading.map((item) => (
-                      <BookCard 
+                      <BookCard
                         key={item._id}
                         item={item}
                         onRemove={handleRemoveFromShelf}
@@ -307,8 +299,8 @@ export default function Bookshelf() {
               {/* Want to Read */}
               {wantToRead.length > 0 && (
                 <div>
-                  <h2 style={{ 
-                    color: 'white', 
+                  <h2 style={{
+                    color: 'white',
                     marginBottom: '1rem',
                     fontSize: '1.5rem',
                     fontWeight: 'bold'
@@ -321,7 +313,7 @@ export default function Bookshelf() {
                     gap: '1rem'
                   }}>
                     {wantToRead.map((item) => (
-                      <BookCard 
+                      <BookCard
                         key={item._id}
                         item={item}
                         onRemove={handleRemoveFromShelf}
@@ -337,8 +329,8 @@ export default function Bookshelf() {
               {/* Read */}
               {read.length > 0 && (
                 <div>
-                  <h2 style={{ 
-                    color: 'white', 
+                  <h2 style={{
+                    color: 'white',
                     marginBottom: '1rem',
                     fontSize: '1.5rem',
                     fontWeight: 'bold'
@@ -351,7 +343,7 @@ export default function Bookshelf() {
                     gap: '1rem'
                   }}>
                     {read.map((item) => (
-                      <BookCard 
+                      <BookCard
                         key={item._id}
                         item={item}
                         onRemove={handleRemoveFromShelf}
@@ -372,12 +364,12 @@ export default function Bookshelf() {
 }
 
 // Book Card Component
-function BookCard({ 
-  item, 
-  onRemove, 
-  onUpdateStatus, 
-  getStatusIcon, 
-  getStatusColor 
+function BookCard({
+  item,
+  onRemove,
+  onUpdateStatus,
+  getStatusIcon,
+  getStatusColor
 }: {
   item: BookshelfItem;
   onRemove: (id: string) => void;
@@ -409,7 +401,7 @@ function BookCard({
       }}>
         {item.book.coverUrl ? '' : '📖'}
       </div>
-      
+
       <h3 style={{
         fontSize: '1.25rem',
         marginBottom: '0.5rem',
@@ -418,7 +410,7 @@ function BookCard({
       }}>
         {item.book.title}
       </h3>
-      
+
       <p style={{
         color: '#666',
         marginBottom: '1rem',
@@ -426,7 +418,7 @@ function BookCard({
       }}>
         by {item.book.author}
       </p>
-      
+
       {item.book.description && (
         <p style={{
           color: '#555',
@@ -434,13 +426,13 @@ function BookCard({
           lineHeight: '1.5',
           marginBottom: '1rem'
         }}>
-          {item.book.description.length > 100 
+          {item.book.description.length > 100
             ? `${item.book.description.substring(0, 100)}...`
             : item.book.description
           }
         </p>
       )}
-      
+
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -457,14 +449,14 @@ function BookCard({
         }}>
           {getStatusIcon(item.status)} {item.status}
         </div>
-        
+
         {item.book.averageRating && item.book.averageRating > 0 && (
           <div style={{ color: '#f39c12', fontWeight: 'bold' }}>
             ⭐ {item.book.averageRating.toFixed(1)}
           </div>
         )}
       </div>
-      
+
       <div style={{
         display: 'flex',
         gap: '0.5rem'
@@ -499,7 +491,7 @@ function BookCard({
           Remove
         </button>
       </div>
-      
+
       {showActions && (
         <div style={{
           marginTop: '1rem',

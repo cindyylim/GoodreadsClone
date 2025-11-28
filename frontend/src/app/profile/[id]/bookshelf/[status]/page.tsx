@@ -4,15 +4,16 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { User } from '@/types';
 
 export default function UserBookshelfPage({ params }: { params: { id: string; status: string } }) {
   const paramsObj = React.use(params as any) as { id: string; status: string };
   const { id, status } = paramsObj;
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const statusLabels = {
     'want-to-read': 'Want to Read',
@@ -42,10 +43,10 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
         api.get(`/users/${id}`),
         api.get(`/users/${id}/bookshelf?status=${status}`)
       ]);
-      
+
       setUser(userResponse.data);
       setBooks(booksResponse.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to load bookshelf');
       console.error('Error fetching bookshelf:', error);
     } finally {
@@ -55,7 +56,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -74,7 +75,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
 
   if (!user) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -102,7 +103,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -131,18 +132,18 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
           </div>
 
           {/* Header */}
-          <div style={{ 
-            background: 'white', 
-            borderRadius: '1rem', 
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
             padding: '2rem',
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
             marginBottom: '2rem'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <div style={{ 
-                width: 60, 
-                height: 60, 
-                borderRadius: '50%', 
+              <div style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
                 background: user.avatar ? `url(${user.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 display: 'flex',
                 alignItems: 'center',
@@ -166,7 +167,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
             {/* Status Tabs */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {Object.entries(statusLabels).map(([status, label]) => (
-                <Link 
+                <Link
                   key={status}
                   href={`/profile/${user._id}/bookshelf/${status}`}
                   style={{
@@ -253,7 +254,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
                   }}>
                     {bookshelfItem.book.coverUrl ? '' : '📖'}
                   </div>
-                  
+
                   <h3 style={{
                     fontSize: '1.25rem',
                     marginBottom: '0.5rem',
@@ -262,7 +263,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
                   }}>
                     {bookshelfItem.book.title}
                   </h3>
-                  
+
                   <p style={{
                     color: '#666',
                     marginBottom: '1rem',
@@ -270,7 +271,7 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
                   }}>
                     by {bookshelfItem.book.author}
                   </p>
-                  
+
                   {bookshelfItem.book.description && (
                     <p style={{
                       color: '#555',
@@ -278,19 +279,19 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
                       lineHeight: '1.5',
                       marginBottom: '1rem'
                     }}>
-                      {bookshelfItem.book.description.length > 100 
+                      {bookshelfItem.book.description.length > 100
                         ? `${bookshelfItem.book.description.substring(0, 100)}...`
                         : bookshelfItem.book.description
                       }
                     </p>
                   )}
-                  
+
                   {bookshelfItem.rating && (
                     <div style={{ color: '#f39c12', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                       ⭐ {bookshelfItem.rating}/5
                     </div>
                   )}
-                  
+
                   {bookshelfItem.review && (
                     <div style={{
                       background: '#f8f9fa',

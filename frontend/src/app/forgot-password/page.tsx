@@ -19,10 +19,10 @@ export default function ForgotPasswordPage() {
 		try {
 			await api.post('/users/forgot-password', { email });
 			setIsSubmitted(true);
-		} catch (error: any) {
-			if (error.response) {
-				setError(error.response.data.message || 'Something went wrong.');
-			} else if (error.request) {
+		} catch (error: unknown) {
+			if ((error as any).response) {
+				setError((error as any).response?.data?.message || 'Failed to send reset email');
+			} else if ((error as any).request) {
 				setError('No response from server. Check your connection.');
 			} else {
 				setError('An unexpected error occurred.');

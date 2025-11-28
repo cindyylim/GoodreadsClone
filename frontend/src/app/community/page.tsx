@@ -3,16 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { Group, User } from '@/types';
 
-interface Group {
-  _id: string;
-  name: string;
-  description: string;
-  tags: string[];
-  members: any[];
-  createdBy: any;
-  createdAt: string;
-}
+
 
 export default function CommunityPage() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -22,7 +15,7 @@ export default function CommunityPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalGroups, setTotalGroups] = useState(0);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     setUser(getUser());
@@ -43,12 +36,12 @@ export default function CommunityPage() {
       if (searchTerm) {
         params.append('search', searchTerm);
       }
-      
+
       const response = await api.get(`/groups?${params}`);
       setGroups(response.data.groups);
       setTotalPages(response.data.pages);
       setTotalGroups(response.data.total);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to load groups. Please try again.');
       console.error('Error fetching groups:', error);
     } finally {
@@ -70,7 +63,7 @@ export default function CommunityPage() {
 
   if (loading && groups.length === 0) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -88,7 +81,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -109,13 +102,13 @@ export default function CommunityPage() {
 
       <main style={{ padding: '2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             marginBottom: '3rem',
             color: 'white'
           }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
+            <h1 style={{
+              fontSize: '2.5rem',
               marginBottom: '1rem',
               fontWeight: 'bold'
             }}>
@@ -127,7 +120,7 @@ export default function CommunityPage() {
           </div>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} style={{ 
+          <form onSubmit={handleSearch} style={{
             marginBottom: '2rem',
             display: 'flex',
             justifyContent: 'center',
@@ -189,7 +182,7 @@ export default function CommunityPage() {
                 {searchTerm ? 'No groups found' : 'No groups available'}
               </h2>
               <p style={{ marginBottom: '2rem', opacity: 0.8 }}>
-                {searchTerm 
+                {searchTerm
                   ? 'Try adjusting your search terms'
                   : 'Be the first to create a group!'
                 }
@@ -215,8 +208,8 @@ export default function CommunityPage() {
                 gap: '2rem'
               }}>
                 {groups.map((group) => (
-                  <Link 
-                    key={group._id} 
+                  <Link
+                    key={group._id}
                     href={`/community/${group._id}`}
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
@@ -239,7 +232,7 @@ export default function CommunityPage() {
                       }}>
                         {group.name}
                       </h3>
-                      
+
                       <p style={{
                         color: '#666',
                         marginBottom: '1rem',
@@ -248,7 +241,7 @@ export default function CommunityPage() {
                       }}>
                         {group.description || 'No description available'}
                       </p>
-                      
+
                       {group.tags && group.tags.length > 0 && (
                         <div style={{ marginBottom: '1rem' }}>
                           {group.tags.slice(0, 3).map((tag, index) => (
@@ -265,7 +258,7 @@ export default function CommunityPage() {
                           ))}
                         </div>
                       )}
-                      
+
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -275,10 +268,10 @@ export default function CommunityPage() {
                       }}>
                         <span>👥 {group.members.length} members</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ 
-                            width: 24, 
-                            height: 24, 
-                            borderRadius: '50%', 
+                          <div style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
                             background: group.createdBy?.avatar ? `url(${group.createdBy.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             display: 'flex',
                             alignItems: 'center',
@@ -322,7 +315,7 @@ export default function CommunityPage() {
                   >
                     Previous
                   </button>
-                  
+
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const pageNum = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
                     return (
@@ -343,7 +336,7 @@ export default function CommunityPage() {
                       </button>
                     );
                   })}
-                  
+
                   <button
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page === totalPages}
@@ -358,7 +351,7 @@ export default function CommunityPage() {
                   >
                     Next
                   </button>
-                  
+
                   <span style={{ color: 'white', marginLeft: '1rem', fontSize: '0.95rem' }}>
                     Page {page} of {totalPages} ({totalGroups.toLocaleString()} groups)
                   </span>

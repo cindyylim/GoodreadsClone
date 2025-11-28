@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getUser, logout, isAuthenticated } from '@/utils/auth';
+import { User } from '@/types';
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const currentUser = getUser();
@@ -17,7 +18,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white',
@@ -108,30 +109,30 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main style={{ 
+      <main style={{
         padding: '4rem 2rem',
         textAlign: 'center',
         maxWidth: '800px',
         margin: '0 auto'
       }}>
-        <h1 style={{ 
-          fontSize: '3.5rem', 
+        <h1 style={{
+          fontSize: '3.5rem',
           marginBottom: '1rem',
           fontWeight: 'bold',
           textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
         }}>
           Discover Your Next Great Read
         </h1>
-        <p style={{ 
-          fontSize: '1.25rem', 
+        <p style={{
+          fontSize: '1.25rem',
           marginBottom: '2rem',
           opacity: 0.9,
           lineHeight: 1.6
         }}>
-          Track your reading journey, discover new books, and connect with fellow readers. 
+          Track your reading journey, discover new books, and connect with fellow readers.
           Join our community of book lovers today!
         </p>
-        
+
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/books" style={{
             background: 'white',
@@ -163,7 +164,7 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div style={{ 
+        <div style={{
           marginTop: '4rem',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -179,7 +180,7 @@ export default function Home() {
             <h3 style={{ marginBottom: '0.5rem' }}>Track Your Reading</h3>
             <p style={{ opacity: 0.8 }}>Keep track of books you've read, are reading, and want to read.</p>
           </div>
-          
+
           <div style={{
             background: 'rgba(255, 255, 255, 0.1)',
             padding: '2rem',
@@ -190,7 +191,7 @@ export default function Home() {
             <h3 style={{ marginBottom: '0.5rem' }}>Rate & Review</h3>
             <p style={{ opacity: 0.8 }}>Share your thoughts and discover what others think about books.</p>
           </div>
-          
+
           <div style={{
             background: 'rgba(255, 255, 255, 0.1)',
             padding: '2rem',

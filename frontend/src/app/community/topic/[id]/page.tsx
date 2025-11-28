@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { Topic, User, Post } from '@/types';
 
 export default function TopicPage({ params }: { params: { id: string } }) {
-  const [topic, setTopic] = useState<any>(null);
+  const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [postingReply, setPostingReply] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const {id} = React.use(params as any) as {id: string};
+  const [user, setUser] = useState<User | null>(null);
+  const { id } = React.use(params) as { id: string };
 
   useEffect(() => {
     setUser(getUser());
@@ -27,7 +28,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
     try {
       const response = await api.get(`/topics/${params.id}`);
       setTopic(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to load topic. Please try again.');
       console.error('Error fetching topic:', error);
     } finally {
@@ -38,7 +39,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim()) return;
-    
+
     setPostingReply(true);
     try {
       const response = await api.post(`/topics/${params.id}/reply`, {
@@ -46,7 +47,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
       });
       setTopic(response.data);
       setReplyContent('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error posting reply:', error);
     } finally {
       setPostingReply(false);
@@ -55,7 +56,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -74,7 +75,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
 
   if (!topic) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -102,7 +103,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -137,24 +138,24 @@ export default function TopicPage({ params }: { params: { id: string } }) {
 
         {/* Posts */}
         <div style={{ marginBottom: '2rem' }}>
-          {topic.posts.map((post: any, index: number) => (
-            <div key={index} style={{ 
+          {topic.posts.map((post: Post, index: number) => (
+            <div key={index} style={{
               border: index === 0 ? '2px solid #667eea' : '1px solid #eee',
               borderRadius: '0.5rem',
               padding: '1.5rem',
               marginBottom: '1rem',
               background: index === 0 ? '#f8f9ff' : 'white'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
                 gap: '1rem',
-                marginBottom: '1rem' 
+                marginBottom: '1rem'
               }}>
-                <div style={{ 
-                  width: 50, 
-                  height: 50, 
-                  borderRadius: '50%', 
+                <div style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: '50%',
                   background: post.author?.avatar ? `url(${post.author.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   display: 'flex',
                   alignItems: 'center',
@@ -168,17 +169,17 @@ export default function TopicPage({ params }: { params: { id: string } }) {
                   {!post.author?.avatar && (post.author?.name ? post.author.name.charAt(0).toUpperCase() : '👤')}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: '0.5rem',
-                    marginBottom: '0.5rem' 
+                    marginBottom: '0.5rem'
                   }}>
-                    <Link 
-                      href={`/profile/${post.author?._id}`} 
-                      style={{ 
-                        fontWeight: 'bold', 
-                        color: '#667eea', 
+                    <Link
+                      href={`/profile/${post.author?._id}`}
+                      style={{
+                        fontWeight: 'bold',
+                        color: '#667eea',
                         fontSize: '1rem',
                         textDecoration: 'none',
                         cursor: 'pointer'
@@ -188,22 +189,22 @@ export default function TopicPage({ params }: { params: { id: string } }) {
                     >
                       {post.author?.name || 'Unknown'}
                     </Link>
-                    {index === 0 && <span style={{ 
-                      background: '#667eea', 
-                      color: 'white', 
-                      padding: '0.25rem 0.5rem', 
-                      borderRadius: '0.25rem', 
+                    {index === 0 && <span style={{
+                      background: '#667eea',
+                      color: 'white',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
                       fontSize: '0.7rem',
                       fontWeight: 'bold'
                     }}>
                       OP
                     </span>}
                     <div style={{ color: '#888', fontSize: '0.85rem' }}>
-                      {new Date(post.createdAt).toLocaleDateString()} at {new Date(post.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      {new Date(post.createdAt).toLocaleDateString()} at {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
-                  <div style={{ 
-                    lineHeight: '1.6', 
+                  <div style={{
+                    lineHeight: '1.6',
                     color: '#333',
                     whiteSpace: 'pre-wrap',
                     fontSize: '0.95rem'
@@ -257,10 +258,10 @@ export default function TopicPage({ params }: { params: { id: string } }) {
         )}
 
         {!user && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '2rem', 
-            background: '#f8f9fa', 
+          <div style={{
+            textAlign: 'center',
+            padding: '2rem',
+            background: '#f8f9fa',
             borderRadius: '0.5rem',
             borderTop: '2px solid #eee'
           }}>

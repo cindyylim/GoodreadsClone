@@ -4,21 +4,22 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { User } from '@/types';
 
 export default function PublicProfilePage({ params }: { params: { id: string } }) {
   const paramsObj = React.use(params as any) as { id: string };
   const { id } = paramsObj;
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [bookshelfStats, setBookshelfStats] = useState({
     'want-to-read': 0,
     'currently-reading': 0,
     'read': 0
   });
-  const [followers, setFollowers] = useState<any[]>([]);
-  const [following, setFollowing] = useState<any[]>([]);
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [following, setFollowing] = useState<User[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
@@ -39,18 +40,18 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
         api.get(`/users/${id}/followers`),
         api.get(`/users/${id}/following`)
       ]);
-      
+
       setUser(userResponse.data);
       setBookshelfStats(bookshelfResponse.data);
       setFollowers(followersResponse.data);
       setFollowing(followingResponse.data);
-      
+
       // Check if current user is following this user
       if (currentUser) {
         const isFollowingResponse = await api.get(`/users/${id}/follow-status`);
         setIsFollowing(isFollowingResponse.data.isFollowing);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('User not found or profile is private');
       console.error('Error fetching user profile:', error);
     } finally {
@@ -74,14 +75,14 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
         setIsFollowing(true);
         setFollowers(prev => [...prev, currentUser]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error following/unfollowing:', error);
     }
   };
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -100,7 +101,7 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
 
   if (!user) {
     return (
-      <div style={{ 
+      <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -131,7 +132,7 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
   }
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -150,18 +151,18 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
 
       <main style={{ padding: '2rem' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div style={{ 
-            background: 'white', 
-            borderRadius: '1rem', 
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
             padding: '2rem',
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
           }}>
             {/* Profile Header */}
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div style={{ 
-                width: 120, 
-                height: 120, 
-                borderRadius: '50%', 
+              <div style={{
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
                 background: user.avatar ? `url(${user.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 margin: '0 auto 1rem',
                 display: 'flex',
@@ -180,7 +181,7 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
               <p style={{ color: '#666', margin: 0, marginBottom: '1rem' }}>
                 Member since {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
               </p>
-              
+
               {/* Follow Button */}
               {currentUser && currentUser._id !== user._id && (
                 <button
@@ -203,11 +204,11 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
             </div>
 
             {/* Stats Row */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '1rem', 
-              marginBottom: '2rem' 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem',
+              marginBottom: '2rem'
             }}>
               <div style={{ textAlign: 'center', padding: '1rem', background: '#f8f9fa', borderRadius: '0.5rem' }}>
                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#667eea' }}>{followers.length}</div>
@@ -230,10 +231,10 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
                 {user.name}'s Bookshelf
               </h3>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-                gap: '1rem' 
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '1rem'
               }}>
                 <Link href={`/profile/${user._id}/bookshelf/want-to-read`} style={{
                   background: '#e3f2fd',
@@ -249,7 +250,7 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
                   <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>Want to Read</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{bookshelfStats['want-to-read']} books</div>
                 </Link>
-                
+
                 <Link href={`/profile/${user._id}/bookshelf/currently-reading`} style={{
                   background: '#fff3e0',
                   color: '#f57c00',
@@ -264,7 +265,7 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
                   <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>Currently Reading</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{bookshelfStats['currently-reading']} books</div>
                 </Link>
-                
+
                 <Link href={`/profile/${user._id}/bookshelf/read`} style={{
                   background: '#e8f5e8',
                   color: '#388e3c',
@@ -284,10 +285,10 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
 
             {/* Bio Section */}
             {user.bio && (
-              <div style={{ 
-                background: '#f8f9fa', 
-                padding: '1.5rem', 
-                borderRadius: '0.5rem', 
+              <div style={{
+                background: '#f8f9fa',
+                padding: '1.5rem',
+                borderRadius: '0.5rem',
                 marginBottom: '2rem',
                 border: '1px solid #e9ecef'
               }}>
@@ -306,26 +307,26 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
                 Followers ({followers.length})
               </h3>
               {followers.length > 0 ? (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-                  gap: '1rem' 
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: '1rem'
                 }}>
-                  {followers.slice(0, 12).map((follower: any) => (
+                  {followers.slice(0, 12).map((follower: User) => (
                     <Link key={follower._id} href={`/profile/${follower._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      <div style={{ 
-                        textAlign: 'center', 
-                        padding: '0.75rem', 
-                        background: '#f8f9fa', 
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '0.75rem',
+                        background: '#f8f9fa',
                         borderRadius: '0.5rem',
                         border: '1px solid #e9ecef',
                         transition: 'transform 0.2s',
                         cursor: 'pointer'
                       }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                        <div style={{ 
-                          width: 40, 
-                          height: 40, 
-                          borderRadius: '50%', 
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
                           background: follower.avatar ? `url(${follower.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                           margin: '0 auto 0.5rem',
                           display: 'flex',
@@ -352,9 +353,9 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
             </div>
 
             {/* Action Buttons */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
               gap: '1rem',
               flexWrap: 'wrap'
             }}>
@@ -384,8 +385,8 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
               )}
             </div>
 
-            <div style={{ 
-              textAlign: 'center', 
+            <div style={{
+              textAlign: 'center',
               marginTop: '2rem',
               paddingTop: '2rem',
               borderTop: '1px solid #eee'

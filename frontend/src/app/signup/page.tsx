@@ -29,21 +29,21 @@ export default function Signup() {
 
     try {
       const response = await api.post('/users/register', formData);
-      
+
       // Store the token and user data using the auth utility
       setAuth(response.data.token, response.data.user);
-      
+
       // Redirect to verify email page
       router.push('/verify-email');
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Registration failed. Please try again.');
+    } catch (error: unknown) {
+      setError((error as any).response?.data?.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       display: 'flex',
@@ -61,8 +61,8 @@ export default function Signup() {
         maxWidth: '400px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ 
-            fontSize: '2rem', 
+          <h1 style={{
+            fontSize: '2rem',
             marginBottom: '0.5rem',
             color: '#333'
           }}>
@@ -191,8 +191,8 @@ export default function Signup() {
           </button>
         </form>
 
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '2rem',
           paddingTop: '2rem',
           borderTop: '1px solid #eee'
@@ -209,8 +209,8 @@ export default function Signup() {
           </p>
         </div>
 
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '1rem'
         }}>
           <Link href="/" style={{

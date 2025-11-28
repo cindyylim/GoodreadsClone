@@ -6,9 +6,9 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 
 export default function ResetPasswordPage({ params }: { params: { id: string } }) {
-    const paramsObj = React.use(params as any) as { id: string };
-    const { token } = paramsObj;
-    const router = useRouter();
+	const paramsObj = React.use(params as any) as { id: string };
+	const { token } = paramsObj;
+	const router = useRouter();
 
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,10 +34,10 @@ export default function ResetPasswordPage({ params }: { params: { id: string } }
 			setTimeout(() => {
 				router.push("/login");
 			}, 2000);
-		} catch (err: any) {
-			if (err.response) {
-				setError(err.response.data.message || "Invalid or expired reset link.");
-			} else if (err.request) {
+		} catch (err: unknown) {
+			if ((err as any).response) {
+				setError((err as any).response?.data?.message || 'Failed to reset password');
+			} else if ((err as any).request) {
 				setError("No response from server. Please check your connection.");
 			} else {
 				setError("Unexpected error occurred.");

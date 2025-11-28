@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { User } from '@/types';
 
 // Create an axios instance with base configuration
 export const api = axios.create({
@@ -69,9 +70,9 @@ export const logout = async () => {
   window.location.href = '/';
 };
 
-export const setAuth = (token: string, user: any) => {
+export const setAuth = (token: string, user: User) => {
   localStorage.setItem('token', token);
-  if (user && user !== 'undefined' && user !== 'null') {
+  if (user) {
     localStorage.setItem('user', JSON.stringify(user));
   } else {
     localStorage.removeItem('user');

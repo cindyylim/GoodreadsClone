@@ -3,19 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, getUser } from '@/utils/auth';
+import { Group, Topic, User } from '@/types';
 
 export default function CommunityPage({ params }: { params: { id: string } }) {
-  const [group, setGroup] = useState<any>(null);
-  const [topics, setTopics] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<'home' | 'discussions' | 'members'>('home');
   const [isMember, setIsMember] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [showTopicForm, setShowTopicForm] = useState(false);
   const [topicTitle, setTopicTitle] = useState('');
   const [topicContent, setTopicContent] = useState('');
   const [creatingTopic, setCreatingTopic] = useState(false);
-  const { id } = React.use(params as any) as { id: string };
+  const { id } = React.use(params) as { id: string };
   useEffect(() => {
     setUser(getUser());
   }, []);
@@ -25,7 +26,7 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
       const groupRes = await api.get(`/groups/${id}`);
       setGroup(groupRes.data);
       setMembers(groupRes.data.members);
-      setIsMember(groupRes.data.members.some((m: any) => m._id === user?._id));
+      setIsMember(groupRes.data.members.some((m: User) => m._id === user?._id));
       const topicsRes = await api.get(`/groups/${id}/topics`);
       setTopics(topicsRes.data);
     }
@@ -35,19 +36,19 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
   const handleJoin = async () => {
     await api.post(`/groups/${id}/join`);
     setIsMember(true);
-    setMembers((prev) => [...prev, user]);
+    setMembers((prev) => user ? [...prev, user] : prev);
   };
 
   const handleLeave = async () => {
     await api.post(`/groups/${id}/leave`);
     setIsMember(false);
-    setMembers((prev) => prev.filter((m: any) => m._id !== user._id));
+    setMembers((prev) => prev.filter((m: User) => user && m._id !== user._id));
   };
 
   const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topicTitle.trim() || !topicContent.trim()) return;
-    
+
     setCreatingTopic(true);
     try {
       const response = await api.post(`/groups/${id}/topics`, {
@@ -58,7 +59,7 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
       setTopicTitle('');
       setTopicContent('');
       setShowTopicForm(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating topic:', error);
     } finally {
       setCreatingTopic(false);
@@ -122,7 +123,7 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
           {['home', 'discussions', 'members'].map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as 'home' | 'discussions' | 'members')}
               style={{
                 background: 'none',
                 border: 'none',
@@ -156,48 +157,48 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
               ))}
             </div>
             {/* Pagination Controls */}
-          <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                background: currentPage === 1 ? '#ccc' : '#667eea',
-                color: 'white',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
-              }}       
-            >
-              Previous
-            </button>
-            <span>{currentPage} of {totalPages}</span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                background: currentPage === totalPages ? '#ccc' : '#667eea',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              Next
-            </button>
-          </div>
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  background: currentPage === 1 ? '#ccc' : '#667eea',
+                  color: 'white',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Previous
+              </button>
+              <span>{currentPage} of {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  background: currentPage === totalPages ? '#ccc' : '#667eea',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next
+              </button>
+            </div>
             {isMember && (
-              <button 
+              <button
                 onClick={() => setShowTopicForm(true)}
-                style={{ 
-                  marginTop: 16, 
-                  background: '#667eea', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: 4, 
-                  padding: '0.5rem 1rem', 
+                style={{
+                  marginTop: 16,
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '0.5rem 1rem',
                   cursor: 'pointer',
                   fontWeight: 'bold'
                 }}
@@ -213,14 +214,14 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontSize: '1.3rem' }}>All Discussions</h2>
               {isMember && (
-                <button 
+                <button
                   onClick={() => setShowTopicForm(true)}
-                  style={{ 
-                    background: '#667eea', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: 4, 
-                    padding: '0.5rem 1rem', 
+                  style={{
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '0.5rem 1rem',
                     cursor: 'pointer',
                     fontWeight: 'bold'
                   }}
@@ -240,38 +241,38 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
               </Link>
             ))}
             {/* Pagination Controls */}
-          <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                background: currentPage === 1 ? '#ccc' : '#667eea',
-                color: 'white',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
-              }}           
-            >
-              Previous
-            </button>
-            <span>{currentPage} of {totalPages}</span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                background: currentPage === totalPages ? '#ccc' : '#667eea',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              Next
-            </button>
-          </div>
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  background: currentPage === 1 ? '#ccc' : '#667eea',
+                  color: 'white',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Previous
+              </button>
+              <span>{currentPage} of {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  background: currentPage === totalPages ? '#ccc' : '#667eea',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 
@@ -279,12 +280,12 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
           <div>
             <h2 style={{ fontSize: '1.3rem', marginBottom: 16 }}>Members ({members.length})</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-              {members.map((member: any) => (
+              {members.map((member: User) => (
                 <Link key={member._id} href={`/profile/${member._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div key={member._id} style={{ 
-                    background: '#f8f9fa', 
-                    borderRadius: 12, 
-                    padding: 16, 
+                  <div key={member._id} style={{
+                    background: '#f8f9fa',
+                    borderRadius: 12,
+                    padding: 16,
                     textAlign: 'center',
                     border: '1px solid #e9ecef',
                     transition: 'transform 0.2s, box-shadow 0.2s',
@@ -296,10 +297,10 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = 'none';
                   }}>
-                    <div style={{ 
-                      width: 60, 
-                      height: 60, 
-                      borderRadius: '50%', 
+                    <div style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
                       background: member.avatar ? `url(${member.avatar}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       margin: '0 auto 12px',
                       display: 'flex',
@@ -314,9 +315,9 @@ export default function CommunityPage({ params }: { params: { id: string } }) {
                     </div>
                     <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#667eea' }}>{member.name}</div>
                     {member.bio && (
-                      <div style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#666', 
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: '#666',
                         lineHeight: '1.4',
                         maxHeight: '2.8em',
                         overflow: 'hidden',
