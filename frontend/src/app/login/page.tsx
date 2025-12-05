@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api, setAuth } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function Login() {
+  const login = useAuthStore((state) => state.login);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,8 +31,7 @@ export default function Login() {
     try {
       const response = await api.post('/users/login', formData);
 
-      // Store the token and user data using the auth utility
-      setAuth(response.data.token, response.data.user);
+      login(response.data.user);
 
       // Redirect to books page
       router.push('/books');

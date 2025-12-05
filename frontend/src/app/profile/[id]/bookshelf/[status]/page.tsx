@@ -3,17 +3,19 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { User } from '@/types';
+import { useParams } from 'next/navigation';
 
-export default function UserBookshelfPage({ params }: { params: { id: string; status: string } }) {
-  const paramsObj = React.use(params as any) as { id: string; status: string };
-  const { id, status } = paramsObj;
+export default function UserBookshelfPage() {
+  const params = useParams() as { id: string; status: string };
+  const { id, status } = params;
   const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: currentUser } = useAuthStore();
 
   const statusLabels = {
     'want-to-read': 'Want to Read',
@@ -27,9 +29,6 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
     'read': { bg: '#e8f5e8', color: '#388e3c', border: '#c8e6c9' }
   };
 
-  useEffect(() => {
-    setCurrentUser(getUser());
-  }, []);
 
   useEffect(() => {
     fetchUserBookshelf();
@@ -177,8 +176,8 @@ export default function UserBookshelfPage({ params }: { params: { id: string; st
                     fontWeight: 'bold',
                     fontSize: '0.9rem',
                     background: params.status === status ? statusColors[status as keyof typeof statusColors].bg : 'transparent',
-                    color: params.status === status ? statusColors[status as keyof typeof statusColors].color : '#666',
-                    border: params.status === status ? `2px solid ${statusColors[status as keyof typeof statusColors].border}` : '2px solid transparent'
+                    color: status === status ? statusColors[status as keyof typeof statusColors].color : '#666',
+                    border: status === status ? `2px solid ${statusColors[status as keyof typeof statusColors].border}` : '2px solid transparent'
                   }}
                 >
                   {label}

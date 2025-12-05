@@ -39,4 +39,11 @@ const bookshelfSchema = new mongoose.Schema({
 // Ensure unique user-book combinations
 bookshelfSchema.index({ user: 1, book: 1 }, { unique: true });
 
-export const Bookshelf = mongoose.model('Bookshelf', bookshelfSchema); 
+// Additional indexes for better query performance
+bookshelfSchema.index({ user: 1, status: 1 }); // For getting user's books by status
+bookshelfSchema.index({ user: 1, dateAdded: -1 }); // For getting user's recently added books
+bookshelfSchema.index({ user: 1, rating: -1 }); // For getting user's highly rated books
+bookshelfSchema.index({ book: 1 }); // For finding all users who have a specific book
+bookshelfSchema.index({ status: 1 }); // For filtering by status across all users
+
+export const Bookshelf = mongoose.model('Bookshelf', bookshelfSchema);

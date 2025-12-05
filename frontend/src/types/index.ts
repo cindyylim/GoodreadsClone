@@ -20,6 +20,17 @@ export interface Book {
   shelfStatus?: string;
 }
 
+export interface BookshelfItem {
+  _id: string;
+  user: string;
+  book: Book;
+  status: 'read' | 'currently-reading' | 'want-to-read';
+  rating?: number;
+  review?: string;
+  dateAdded: string;
+  dateRead?: string;
+}
+
 export interface Group {
   _id: string;
   name: string;

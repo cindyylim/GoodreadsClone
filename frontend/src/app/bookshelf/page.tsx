@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser, logout } from '@/utils/auth';
+import { api } from '@/utils/auth';
 import { Book, User } from '@/types';
-
+import { useAuthStore } from '@/store/useAuthStore';
 
 
 interface BookshelfItem {
@@ -20,24 +20,22 @@ export default function Bookshelf() {
   const [bookshelf, setBookshelf] = useState<BookshelfItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuthStore();
 
   useEffect(() => {
-    const currentUser = getUser();
-    setUser(currentUser);
-
-    if (currentUser) {
+    if (user) {
       fetchBookshelf();
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchBookshelf = async () => {
+    if (!user) return;
     setLoading(true);
     setError('');
     try {
-      const response = await api.get(`/users/${getUser()._id}/bookshelf`);
+      const response = await api.get(`/users/${user._id}/bookshelf`);
       setBookshelf(response.data);
     } catch (error: unknown) {
       if ((error as any).response?.status === 401) {

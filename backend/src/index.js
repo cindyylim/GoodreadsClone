@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import dotenv from "dotenv";
 import crypto from "crypto";
-import {serialize} from "cookie"
+import { serialize, parse } from "cookie";
 
 dotenv.config();
 import { connectDB } from './db.js';
@@ -18,7 +18,10 @@ import { Topic } from './models/Topic.js';
 import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from './mailtrap/emails.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -29,7 +32,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Generate JWT Token
 const generateToken = (res, userId) => {
-  const token =  jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
   res.setHeader('Set-Cookie', serialize('token', token, {
     httpOnly: true,
     path: '/',
@@ -40,8 +43,11 @@ const generateToken = (res, userId) => {
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  let token = null;
+  if (req.headers.cookie) {
+    const cookies = parse(req.headers.cookie);
+    token = cookies.token;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
@@ -71,15 +77,15 @@ app.post("/api/users/verify-email", async (req, res) => {
   try {
     const user = await User.findOne({
       verificationToken: verificationCode,
-      verificationTokenExpiresAt: {$gt: Date.now()}
+      verificationTokenExpiresAt: { $gt: Date.now() }
     })
     if (!user) {
-      return res.status(400).json({success: false, message: "Invalid or expired verification code"})
+      return res.status(400).json({ success: false, message: "Invalid or expired verification code" })
     }
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiresAt = undefined;
-    
+
     await user.save();
 
     const token = generateToken(res, user._id);
@@ -103,7 +109,7 @@ app.post("/api/users/verify-email", async (req, res) => {
 app.post('/api/users/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -114,7 +120,7 @@ app.post('/api/users/register', async (req, res) => {
     // Create new user
     const user = new User({ name, email, password, verificationToken, verificationTokenExpiresAt: Date.now() + 15 * 60 * 1000 });
     await user.save();
-    
+
     // Generate token
     const token = generateToken(res, user._id);
     await sendVerificationEmail(user.email, verificationToken)
@@ -127,9 +133,9 @@ app.post('/api/users/register', async (req, res) => {
       bio: user.bio,
       createdAt: user.createdAt
     };
-    
-    res.status(201).json({ 
-      message: 'User created successfully', 
+
+    res.status(201).json({
+      message: 'User created successfully',
       token,
       user: userResponse
     });
@@ -141,19 +147,19 @@ app.post('/api/users/register', async (req, res) => {
 app.post('/api/users/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    
+
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    
+
     // Generate token
     const token = generateToken(res, user._id);
     user.lastLogin = new Date();
@@ -167,9 +173,9 @@ app.post('/api/users/login', async (req, res) => {
       bio: user.bio,
       createdAt: user.createdAt
     };
-    
-    res.json({ 
-      message: 'Login successful', 
+
+    res.json({
+      message: 'Login successful',
       token,
       user: userResponse
     });
@@ -179,11 +185,11 @@ app.post('/api/users/login', async (req, res) => {
 });
 
 app.post("/api/users/forgot-password", async (req, res) => {
-  const {email} = req.body;
+  const { email } = req.body;
   try {
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({message: "User not found"});
+      return res.status(400).json({ message: "User not found" });
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
@@ -204,9 +210,9 @@ app.post("/api/users/reset-password/:token", async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    const user = await User.findOne({resetPasswordToken: token, resetPasswordExpiresAt: {$gt: Date.now()}})
+    const user = await User.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } })
     if (!user) {
-      return res.status(400).json({success: false, message: "Invalid or expired reset token"});
+      return res.status(400).json({ success: false, message: "Invalid or expired reset token" });
     }
     user.password = password;
     user.resetPasswordToken = undefined;
@@ -214,7 +220,7 @@ app.post("/api/users/reset-password/:token", async (req, res) => {
     await user.save();
     await sendResetSuccessEmail(user.email);
 
-    res.status(200).json({success: true, message: "Password reset successfully"});
+    res.status(200).json({ success: true, message: "Password reset successfully" });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -222,7 +228,7 @@ app.post("/api/users/reset-password/:token", async (req, res) => {
 
 app.post("/api/users/logout", async (req, res) => {
   res.clearCookie("token");
-  res.status(200).json({success: true, message: "Logged out successfully"});
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 })
 
 // Get current user profile
@@ -242,7 +248,7 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
   try {
     const { name, email, avatar, bio } = req.body;
-    
+
     // Check if email is already taken by another user
     if (email) {
       const existingUser = await User.findOne({ email, _id: { $ne: req.user.userId } });
@@ -250,17 +256,17 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: 'Email is already taken' });
       }
     }
-    
+
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       { name, email, avatar, bio },
       { new: true, runValidators: true }
     ).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -271,9 +277,9 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 app.get('/api/users/:id', async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('User profile request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const user = await User.findById(userId).select('-password -email');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -290,24 +296,24 @@ app.get('/api/users/:id/bookshelf', async (req, res) => {
   try {
     const { status } = req.query;
     const userId = req.params.id;
-    
+
     console.log('Bookshelf request:', { userId, status, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     // Try to handle the user ID more flexibly
     let query = { user: userId };
-    
+
     if (status) {
       query.status = status;
     }
-    
+
     console.log('Query:', query);
-    
+
     const bookshelf = await Bookshelf.find(query)
       .populate('book')
       .sort({ dateAdded: -1 });
-    
+
     console.log('Found bookshelf items:', bookshelf.length);
-    
+
     res.json(bookshelf);
   } catch (error) {
     console.error('Bookshelf error:', error);
@@ -319,26 +325,26 @@ app.get('/api/users/:id/bookshelf', async (req, res) => {
 app.get('/api/users/:id/bookshelf/stats', async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Bookshelf stats request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const stats = await Bookshelf.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
-    
+
     console.log('Stats result:', stats);
-    
+
     const result = {
       'want-to-read': 0,
       'currently-reading': 0,
       'read': 0
     };
-    
+
     stats.forEach(stat => {
       result[stat._id] = stat.count;
     });
-    
+
     res.json(result);
   } catch (error) {
     console.error('Bookshelf stats error:', error);
@@ -350,9 +356,9 @@ app.get('/api/users/:id/bookshelf/stats', async (req, res) => {
 app.get('/api/users/:id/followers', async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Followers request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const user = await User.findById(userId).populate('followers', 'name avatar');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -368,9 +374,9 @@ app.get('/api/users/:id/followers', async (req, res) => {
 app.get('/api/users/:id/following', async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Following request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const user = await User.findById(userId).populate('following', 'name avatar');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -386,14 +392,14 @@ app.get('/api/users/:id/following', async (req, res) => {
 app.get('/api/users/:id/follow-status', authenticateToken, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Follow status request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     const isFollowing = user.followers && user.followers.includes(req.user.userId);
     res.json({ isFollowing });
   } catch (error) {
@@ -406,32 +412,32 @@ app.get('/api/users/:id/follow-status', authenticateToken, async (req, res) => {
 app.post('/api/users/:id/follow', authenticateToken, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Follow request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     if (userId === req.user.userId) {
       return res.status(400).json({ message: 'Cannot follow yourself' });
     }
-    
+
     const userToFollow = await User.findById(userId);
     if (!userToFollow) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     const currentUser = await User.findById(req.user.userId);
-    
+
     // Add to following list
     if (!currentUser.following.includes(userId)) {
       currentUser.following.push(userId);
       await currentUser.save();
     }
-    
+
     // Add to followers list
     if (!userToFollow.followers.includes(req.user.userId)) {
       userToFollow.followers.push(req.user.userId);
       await userToFollow.save();
     }
-    
+
     res.json({ message: 'Successfully followed user' });
   } catch (error) {
     console.error('Follow error:', error);
@@ -443,24 +449,24 @@ app.post('/api/users/:id/follow', authenticateToken, async (req, res) => {
 app.delete('/api/users/:id/follow', authenticateToken, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     console.log('Unfollow request:', { userId, userIdType: typeof userId, userIdLength: userId.length });
-    
+
     const userToUnfollow = await User.findById(userId);
     if (!userToUnfollow) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     const currentUser = await User.findById(req.user.userId);
-    
+
     // Remove from following list
     currentUser.following = currentUser.following.filter(id => id.toString() !== userId);
     await currentUser.save();
-    
+
     // Remove from followers list
     userToUnfollow.followers = userToUnfollow.followers.filter(id => id.toString() !== req.user.userId);
     await userToUnfollow.save();
-    
+
     res.json({ message: 'Successfully unfollowed user' });
   } catch (error) {
     console.error('Unfollow error:', error);
@@ -494,7 +500,7 @@ app.get('/api/books', async (req, res) => {
 app.post('/api/books', async (req, res) => {
   try {
     const { title, author, isbn, coverUrl, description, genres, publishedYear } = req.body;
-    
+
     const book = new Book({
       title,
       author,
@@ -504,7 +510,7 @@ app.post('/api/books', async (req, res) => {
       genres,
       publishedYear
     });
-    
+
     await book.save();
     res.status(201).json(book);
   } catch (error) {
@@ -563,17 +569,17 @@ app.put('/api/users/bookshelf/:id', authenticateToken, async (req, res) => {
   try {
     const { status, rating, review } = req.body;
     const bookshelfId = req.params.id;
-    
+
     const bookshelf = await Bookshelf.findOneAndUpdate(
       { _id: bookshelfId, user: req.user.userId },
       { status, rating, review },
       { new: true }
     );
-    
+
     if (!bookshelf) {
       return res.status(404).json({ message: 'Bookshelf item not found' });
     }
-    
+
     res.json(bookshelf);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -584,16 +590,16 @@ app.put('/api/users/bookshelf/:id', authenticateToken, async (req, res) => {
 app.delete('/api/users/bookshelf/:id', authenticateToken, async (req, res) => {
   try {
     const bookshelfId = req.params.id;
-    
+
     const bookshelf = await Bookshelf.findOneAndDelete({
       _id: bookshelfId,
       user: req.user.userId
     });
-    
+
     if (!bookshelf) {
       return res.status(404).json({ message: 'Bookshelf item not found' });
     }
-    
+
     res.json({ message: 'Book removed from shelf' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -622,7 +628,7 @@ app.get('/api/groups', async (req, res) => {
   try {
     const { search, page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
-    
+
     let query = {};
     if (search) {
       query = {
@@ -633,7 +639,7 @@ app.get('/api/groups', async (req, res) => {
         ]
       };
     }
-    
+
     const total = await Group.countDocuments(query);
     const groups = await Group.find(query)
       .populate('members', 'name avatar')
@@ -641,7 +647,7 @@ app.get('/api/groups', async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
-    
+
     res.json({
       groups,
       total,
@@ -741,13 +747,13 @@ app.post('/api/topics/:id/reply', authenticateToken, async (req, res) => {
     const { content } = req.body;
     const topic = await Topic.findById(req.params.id);
     if (!topic) return res.status(404).json({ message: 'Topic not found' });
-    
+
     topic.posts.push({
       author: req.user.userId,
       content
     });
     await topic.save();
-    
+
     const populatedTopic = await Topic.findById(topic._id)
       .populate('author', 'name')
       .populate('posts.author', 'name');

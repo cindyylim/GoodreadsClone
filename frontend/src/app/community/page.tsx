@@ -2,23 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
-import { Group, User } from '@/types';
+import { api } from '@/utils/auth';
+import { useAuthStore, useGroupStore } from '@/store';
 
 
 
 export default function CommunityPage() {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalGroups, setTotalGroups] = useState(0);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, checkAuth } = useAuthStore();
+  const {
+    groups,
+    loading,
+    error,
+    searchTerm,
+    page,
+    totalPages,
+    totalGroups,
+    setGroups,
+    setLoading,
+    setError,
+    setSearchTerm,
+    setPage,
+    setTotalPages,
+    setTotalGroups
+  } = useGroupStore();
 
   useEffect(() => {
-    setUser(getUser());
+    checkAuth();
   }, []);
 
   useEffect(() => {

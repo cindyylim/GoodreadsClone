@@ -2,21 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Topic, User, Post } from '@/types';
+import { useParams } from 'next/navigation';
 
-export default function TopicPage({ params }: { params: { id: string } }) {
+export default function TopicPage() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [postingReply, setPostingReply] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const { id } = React.use(params) as { id: string };
-
-  useEffect(() => {
-    setUser(getUser());
-  }, []);
+  const { user } = useAuthStore();
+  const routeParams = useParams();
+  const id = routeParams.id as string;
 
   useEffect(() => {
     fetchTopic();
@@ -26,7 +25,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get(`/topics/${params.id}`);
+      const response = await api.get(`/topics/${id}`);
       setTopic(response.data);
     } catch (error: unknown) {
       setError('Failed to load topic. Please try again.');
@@ -42,7 +41,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
 
     setPostingReply(true);
     try {
-      const response = await api.post(`/topics/${params.id}/reply`, {
+      const response = await api.post(`/topics/${id}/reply`, {
         content: replyContent
       });
       setTopic(response.data);

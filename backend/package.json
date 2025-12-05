@@ -8,8 +8,8 @@
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-books": "node scripts/generate-books.js",
-    "generate-million": "node scripts/generate-million-books.js",
-    "generate-10k": "node scripts/generate-books.js 10000"
+    "generate-10k": "node scripts/generate-books.js 10000",
+    "create-indexes": "node scripts/createIndexes.js"
   },
   "keywords": [],
   "author": "",

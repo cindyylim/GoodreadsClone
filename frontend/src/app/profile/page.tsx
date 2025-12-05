@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { User } from '@/types';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, isLoading } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -19,20 +20,21 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    const currentUser = getUser();
-    if (!currentUser) {
+    if (!isLoading && !user) {
       window.location.href = '/login';
       return;
     }
-    setUser(currentUser);
-    setFormData({
-      name: currentUser.name || '',
-      email: currentUser.email || '',
-      avatar: currentUser.avatar || '',
-      bio: currentUser.bio || ''
-    });
-    setLoading(false);
-  }, []);
+
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        avatar: user.avatar || '',
+        bio: user.bio || ''
+      });
+      setLoading(false);
+    }
+  }, [user, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,12 +46,6 @@ export default function ProfilePage() {
       const response = await api.put('/users/profile', formData);
       setUser(response.data);
       setSuccess('Profile updated successfully!');
-
-      // Update localStorage
-      const token = localStorage.getItem('token');
-      if (token) {
-        localStorage.setItem('user', JSON.stringify(response.data));
-      }
     } catch (error: unknown) {
       setError((error as any).response?.data?.message || 'Failed to update profile');
     } finally {

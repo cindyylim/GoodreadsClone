@@ -2,23 +2,27 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Group, Topic, User } from '@/types';
+import { useParams } from 'next/navigation';
 
-export default function CommunityPage({ params }: { params: { id: string } }) {
+export default function CommunityPage() {
   const [group, setGroup] = useState<Group | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<'home' | 'discussions' | 'members'>('home');
   const [isMember, setIsMember] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, checkAuth } = useAuthStore();
   const [showTopicForm, setShowTopicForm] = useState(false);
   const [topicTitle, setTopicTitle] = useState('');
   const [topicContent, setTopicContent] = useState('');
   const [creatingTopic, setCreatingTopic] = useState(false);
-  const { id } = React.use(params) as { id: string };
+  const routeParams = useParams();
+  const id = routeParams.id as string;
+  
   useEffect(() => {
-    setUser(getUser());
+    checkAuth();
   }, []);
 
   useEffect(() => {

@@ -1,11 +1,13 @@
 'use client';
 
-import { api, setAuth } from "@/utils/auth";
+import { api } from "@/utils/auth";
 import { useState, useRef } from "react";
 import { useRouter } from 'next/navigation';
 import { Loader2 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function VerifyEmail() {
+	const login = useAuthStore((state) => state.login);
 	const [code, setCode] = useState(["", "", "", "", "", ""]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -52,7 +54,7 @@ export default function VerifyEmail() {
 		const verificationCode = code.join("");
 		try {
 			const res = await api.post('/users/verify-email', { verificationCode });
-			setAuth(res.data.token, res.data.user);
+			login(res.data.user);
 			router.push('/books');
 		} catch (err: unknown) {
 			if ((err as any).response) {
@@ -88,7 +90,7 @@ export default function VerifyEmail() {
 								value={digit}
 								onChange={(e) => handleChange(index, e.target.value.replace(/\D/, ''))}
 								onKeyDown={(e) => handleKeyDown(index, e)}
-								ref={(el) => inputRefs.current[index] = el}
+								ref={(el) => { inputRefs.current[index] = el; }}
 								className="w-12 h-12 md:w-14 md:h-14 text-center text-2xl font-semibold rounded-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition"
 							/>
 						))}

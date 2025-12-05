@@ -1,17 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { getUser, logout, isAuthenticated } from '@/utils/auth';
-import { User } from '@/types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const currentUser = getUser();
-    setUser(currentUser);
-  }, []);
+  const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
     logout();

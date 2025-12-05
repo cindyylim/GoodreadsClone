@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api, setAuth } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function Signup() {
+  const login = useAuthStore((state) => state.login);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,8 +32,7 @@ export default function Signup() {
     try {
       const response = await api.post('/users/register', formData);
 
-      // Store the token and user data using the auth utility
-      setAuth(response.data.token, response.data.user);
+      login(response.data.user);
 
       // Redirect to verify email page
       router.push('/verify-email');

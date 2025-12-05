@@ -45,4 +45,11 @@ const bookSchema = new mongoose.Schema({
 // Create text index for search
 bookSchema.index({ title: 'text', author: 'text', description: 'text' });
 
-export const Book = mongoose.model('Book', bookSchema); 
+// Additional indexes for better query performance
+bookSchema.index({ author: 1 }); // For filtering by author
+bookSchema.index({ genres: 1 }); // For filtering by genre
+bookSchema.index({ averageRating: -1 }); // For sorting by rating (highest first)
+bookSchema.index({ publishedYear: -1 }); // For sorting by publication year (newest first)
+bookSchema.index({ createdAt: -1 }); // For finding recently added books
+
+export const Book = mongoose.model('Book', bookSchema);

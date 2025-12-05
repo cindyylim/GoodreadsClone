@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser, logout } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore, useBookStore } from '@/store';
 
-import { Book, User } from '@/types';
+import { Book } from '@/types';
 
 interface BooksResponse {
   books: Book[];
@@ -16,23 +17,26 @@ interface BooksResponse {
 const PAGE_SIZE = 20;
 
 export default function Books() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalBooks, setTotalBooks] = useState(0);
+  const { user, logout } = useAuthStore();
+  const {
+    books,
+    loading,
+    error,
+    searchTerm,
+    page,
+    totalPages,
+    totalBooks,
+    setBooks,
+    setLoading,
+    setError,
+    setSearchTerm,
+    setPage,
+    setTotalPages,
+    setTotalBooks
+  } = useBookStore();
   const [addingToShelf, setAddingToShelf] = useState<string | null>(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState<string | null>(null);
 
-  useEffect(() => {
-    const currentUser = getUser();
-    console.log('Current user:', currentUser);
-    console.log('Component loaded - testing console');
-    setUser(currentUser);
-  }, []);
 
   useEffect(() => {
     console.log('Dropdown state changed:', showStatusDropdown);

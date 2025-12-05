@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function CreateGroupPage() {
   const [name, setName] = useState('');
@@ -12,7 +13,7 @@ export default function CreateGroupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const user = getUser();
+  const { user } = useAuthStore();
 
   if (!user) {
     return (

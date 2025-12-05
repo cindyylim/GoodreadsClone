@@ -3,16 +3,18 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, getUser } from '@/utils/auth';
+import { api } from '@/utils/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { User } from '@/types';
+import { useParams } from 'next/navigation';
 
-export default function PublicProfilePage({ params }: { params: { id: string } }) {
-  const paramsObj = React.use(params as any) as { id: string };
-  const { id } = paramsObj;
+export default function PublicProfilePage() {
+  const params = useParams() as { id: string };
+  const { id } = params;
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: currentUser } = useAuthStore();
   const [bookshelfStats, setBookshelfStats] = useState({
     'want-to-read': 0,
     'currently-reading': 0,
@@ -22,9 +24,6 @@ export default function PublicProfilePage({ params }: { params: { id: string } }
   const [following, setFollowing] = useState<User[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(() => {
-    setCurrentUser(getUser());
-  }, []);
 
   useEffect(() => {
     fetchUserProfile();
