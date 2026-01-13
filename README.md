@@ -1,7 +1,7 @@
 # Goodreads Clone
 
 A scalable Goodreads-like web application for book discovery, rating, reviewing, tracking reading status, social connections, book clubs, and personalized recommendations.
-
+Deployed on Render. Link: https://goodreads-frontend-rp56.onrender.com/login
 ## Features
 - User registration and login (JWT authentication)
 - Book catalog with search and pagination
