@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const response = await api.get('/users/profile');
             set({ user: response.data });
-        } catch (error) {
+        } catch {
             set({ user: null });
         } finally {
             set({ isLoading: false });

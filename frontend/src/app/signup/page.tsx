@@ -37,7 +37,8 @@ export default function Signup() {
       // Redirect to home page
       router.push('/');
     } catch (error: unknown) {
-      setError((error as any).response?.data?.message || 'Signup failed. Please try again.');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }

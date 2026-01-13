@@ -110,7 +110,8 @@ export default function Books() {
       setError('');
     } catch (error: unknown) {
       console.error('Add to shelf error:', error);
-      setError((error as any).response?.data?.message || 'Failed to add book to shelf.');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Failed to add book to shelf.');
     } finally {
       setAddingToShelf(null);
     }

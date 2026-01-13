@@ -1,10 +1,8 @@
 import axios from 'axios';
-import { User } from '@/types';
 import { removeCookie } from './cookies';
-
 // Create an axios instance with base configuration
 export const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -32,8 +30,8 @@ api.interceptors.response.use(
 export const logout = async () => {
   try {
     await api.post("/users/logout");
-  } catch (error) {
-    console.error("Logout error", error);
+  } catch {
+    console.error("Logout error");
   } finally {
     window.location.href = '/';
   }

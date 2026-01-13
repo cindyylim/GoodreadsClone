@@ -171,7 +171,7 @@ export default function Home() {
           }}>
             <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📖</div>
             <h3 style={{ marginBottom: '0.5rem' }}>Track Your Reading</h3>
-            <p style={{ opacity: 0.8 }}>Keep track of books you've read, are reading, and want to read.</p>
+            <p style={{ opacity: 0.8 }}>{"Keep track of books you've read, are reading, and want to read."}</p>
           </div>
 
           <div style={{

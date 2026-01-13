@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
 import { useAuthStore } from '@/store/useAuthStore';
-import { User } from '@/types';
 
 export default function ProfilePage() {
   const { user, setUser, isLoading } = useAuthStore();
@@ -19,7 +18,7 @@ export default function ProfilePage() {
     bio: ''
   });
 
-  useEffect(() => {
+  const checkAuth = useCallback(() => {
     if (!isLoading && !user) {
       window.location.href = '/login';
       return;
@@ -36,7 +35,11 @@ export default function ProfilePage() {
     }
   }, [user, isLoading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
@@ -47,18 +50,19 @@ export default function ProfilePage() {
       setUser(response.data);
       setSuccess('Profile updated successfully!');
     } catch (error: unknown) {
-      setError((error as any).response?.data?.message || 'Failed to update profile');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
-  };
+  }, [formData, setUser]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-  };
+  }, [formData, setFormData]);
 
   if (loading) {
     return (
@@ -123,7 +127,7 @@ export default function ProfilePage() {
                 {formData.name}
               </h1>
               <p style={{ color: '#666', margin: 0 }}>
-                Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '&Unknown&'}
               </p>
             </div>
 

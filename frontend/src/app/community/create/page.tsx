@@ -60,7 +60,8 @@ export default function CreateGroupPage() {
       });
       router.push(`/community/${res.data._id}`);
     } catch (err: unknown) {
-      setError((err as any).response?.data?.message || 'Failed to create group');
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Failed to create group');
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
-import { Book, User } from '@/types';
+import { Book } from '@/types';
 import { useAuthStore } from '@/store/useAuthStore';
 
 
@@ -22,15 +22,7 @@ export default function Bookshelf() {
   const [error, setError] = useState('');
   const { user, logout } = useAuthStore();
 
-  useEffect(() => {
-    if (user) {
-      fetchBookshelf();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchBookshelf = async () => {
+  const fetchBookshelf = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError('');
@@ -38,7 +30,8 @@ export default function Bookshelf() {
       const response = await api.get(`/users/${user._id}/bookshelf`);
       setBookshelf(response.data);
     } catch (error: unknown) {
-      if ((error as any).response?.status === 401) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
         setError('Please log in to view your bookshelf.');
       } else {
         setError('Failed to load your bookshelf. Please try again.');
@@ -47,7 +40,16 @@ export default function Bookshelf() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBookshelf();
+    } else {
+      setLoading(false);
+    }
+  }, [user, fetchBookshelf]);
+
 
   const handleLogout = () => {
     logout();
@@ -57,7 +59,7 @@ export default function Bookshelf() {
     try {
       await api.delete(`/users/bookshelf/${bookshelfId}`);
       setBookshelf(prev => prev.filter(item => item._id !== bookshelfId));
-    } catch (error: unknown) {
+    } catch {
       setError('Failed to remove book from shelf.');
     }
   };
@@ -72,7 +74,7 @@ export default function Bookshelf() {
             : item
         )
       );
-    } catch (error: unknown) {
+    } catch {
       setError('Failed to update book status.');
     }
   };

@@ -19,7 +19,7 @@ import { Topic } from './models/Topic.js';
 
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://goodreads-frontend-rp56.onrender.com'],
   credentials: true
 }));
 app.use(express.json());
@@ -35,6 +35,8 @@ const generateToken = (res, userId) => {
   const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
   res.setHeader('Set-Cookie', serialize('token', token, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7, // 1 week
   }));

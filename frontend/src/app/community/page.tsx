@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
 import { useAuthStore, useGroupStore } from '@/store';
@@ -26,15 +26,7 @@ export default function CommunityPage() {
     setTotalGroups
   } = useGroupStore();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    fetchGroups();
-  }, [page, searchTerm]);
-
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -56,7 +48,15 @@ export default function CommunityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, setLoading, setError, setGroups, setTotalPages, setTotalGroups]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

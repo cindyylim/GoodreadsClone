@@ -21,7 +21,7 @@ interface BookState {
   removeBook: (id: string) => void;
 }
 
-export const useBookStore = create<BookState>((set, get) => ({
+export const useBookStore = create<BookState>((set) => ({
   books: [],
   loading: false,
   error: '',
@@ -30,25 +30,25 @@ export const useBookStore = create<BookState>((set, get) => ({
   totalPages: 1,
   totalBooks: 0,
   
-  setBooks: (books) => set({ books }),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-  setSearchTerm: (searchTerm) => set({ searchTerm }),
-  setPage: (page) => set({ page }),
-  setTotalPages: (totalPages) => set({ totalPages }),
-  setTotalBooks: (totalBooks) => set({ totalBooks }),
+  setBooks: (books: Book[]) => set({ books }),
+  setLoading: (loading: boolean) => set({ loading }),
+  setError: (error: string) => set({ error }),
+  setSearchTerm: (searchTerm: string) => set({ searchTerm }),
+  setPage: (page: number) => set({ page }),
+  setTotalPages: (totalPages: number) => set({ totalPages }),
+  setTotalBooks: (totalBooks: number) => set({ totalBooks }),
   
-  addBook: (book) => set((state) => ({ 
-    books: [...state.books, book] 
+  addBook: (book: Book) => set((state) => ({
+    books: [...state.books, book]
   })),
   
-  updateBook: (id, updatedBook) => set((state) => ({
-    books: state.books.map(book => 
+  updateBook: (id: string, updatedBook: Partial<Book>) => set((state) => ({
+    books: state.books.map(book =>
       book._id === id ? { ...book, ...updatedBook } : book
     )
   })),
   
-  removeBook: (id) => set((state) => ({
+  removeBook: (id: string) => set((state) => ({
     books: state.books.filter(book => book._id !== id)
   }))
 }));

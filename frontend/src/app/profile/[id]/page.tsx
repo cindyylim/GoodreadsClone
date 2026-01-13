@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -24,12 +23,7 @@ export default function PublicProfilePage() {
   const [following, setFollowing] = useState<User[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [id]);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -56,9 +50,9 @@ export default function PublicProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, currentUser]);
 
-  const handleFollow = async () => {
+  const handleFollow = useCallback(async () => {
     if (!currentUser) {
       window.location.href = '/login';
       return;
@@ -77,7 +71,11 @@ export default function PublicProfilePage() {
     } catch (error: unknown) {
       console.error('Error following/unfollowing:', error);
     }
-  };
+  }, [currentUser, id, isFollowing]);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
   if (loading) {
     return (
@@ -228,7 +226,7 @@ export default function PublicProfilePage() {
             {/* Bookshelf Links */}
             <div style={{ marginBottom: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
-                {user.name}'s Bookshelf
+                {`${user.name}'s Bookshelf`}
               </h3>
               <div style={{
                 display: 'grid',
@@ -403,4 +401,4 @@ export default function PublicProfilePage() {
       </main>
     </div>
   );
-} 
+}

@@ -30,7 +30,7 @@ interface GroupState {
   leaveGroup: (userId: string) => void;
 }
 
-export const useGroupStore = create<GroupState>((set, get) => ({
+export const useGroupStore = create<GroupState>((set) => ({
   groups: [],
   currentGroup: null,
   topics: [],
@@ -42,48 +42,48 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   totalGroups: 0,
   isMember: false,
   
-  setGroups: (groups) => set({ groups }),
-  setCurrentGroup: (currentGroup) => set({ currentGroup }),
-  setTopics: (topics) => set({ topics }),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-  setSearchTerm: (searchTerm) => set({ searchTerm }),
-  setPage: (page) => set({ page }),
-  setTotalPages: (totalPages) => set({ totalPages }),
-  setTotalGroups: (totalGroups) => set({ totalGroups }),
-  setIsMember: (isMember) => set({ isMember }),
+  setGroups: (groups: Group[]) => set({ groups }),
+  setCurrentGroup: (currentGroup: Group | null) => set({ currentGroup }),
+  setTopics: (topics: Topic[]) => set({ topics }),
+  setLoading: (loading: boolean) => set({ loading }),
+  setError: (error: string) => set({ error }),
+  setSearchTerm: (searchTerm: string) => set({ searchTerm }),
+  setPage: (page: number) => set({ page }),
+  setTotalPages: (totalPages: number) => set({ totalPages }),
+  setTotalGroups: (totalGroups: number) => set({ totalGroups }),
+  setIsMember: (isMember: boolean) => set({ isMember }),
   
-  addGroup: (group) => set((state) => ({ 
-    groups: [...state.groups, group] 
+  addGroup: (group: Group) => set((state) => ({
+    groups: [...state.groups, group]
   })),
   
-  updateGroup: (id, updatedGroup) => set((state) => ({
-    groups: state.groups.map(group => 
+  updateGroup: (id: string, updatedGroup: Partial<Group>) => set((state) => ({
+    groups: state.groups.map(group =>
       group._id === id ? { ...group, ...updatedGroup } : group
     ),
-    currentGroup: state.currentGroup?._id === id 
-      ? { ...state.currentGroup, ...updatedGroup } 
+    currentGroup: state.currentGroup?._id === id
+      ? { ...state.currentGroup, ...updatedGroup }
       : state.currentGroup
   })),
   
-  removeGroup: (id) => set((state) => ({
+  removeGroup: (id: string) => set((state) => ({
     groups: state.groups.filter(group => group._id !== id),
     currentGroup: state.currentGroup?._id === id ? null : state.currentGroup
   })),
   
-  addTopic: (topic) => set((state) => ({ 
-    topics: [topic, ...state.topics] 
+  addTopic: (topic: Topic) => set((state) => ({
+    topics: [topic, ...state.topics]
   })),
   
-  joinGroup: (userId) => set((state) => ({
-    currentGroup: state.currentGroup 
-      ? { ...state.currentGroup, members: [...state.currentGroup.members, { _id: userId } as any] }
+  joinGroup: (userId: string) => set((state) => ({
+    currentGroup: state.currentGroup
+      ? { ...state.currentGroup, members: [...state.currentGroup.members, { _id: userId, name: '', email: '' }] }
       : null,
     isMember: true
   })),
   
-  leaveGroup: (userId) => set((state) => ({
-    currentGroup: state.currentGroup 
+  leaveGroup: (userId: string) => set((state) => ({
+    currentGroup: state.currentGroup
       ? { ...state.currentGroup, members: state.currentGroup.members.filter(m => m._id !== userId) }
       : null,
     isMember: false

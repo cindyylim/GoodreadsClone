@@ -1,18 +1,17 @@
 'use client';
 
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
 import { useAuthStore } from '@/store/useAuthStore';
-import { User } from '@/types';
+import { User, BookshelfItem } from '@/types';
 import { useParams } from 'next/navigation';
 
 export default function UserBookshelfPage() {
   const params = useParams() as { id: string; status: string };
   const { id, status } = params;
   const [user, setUser] = useState<User | null>(null);
-  const [books, setBooks] = useState<any[]>([]);
+  const [books, setBooks] = useState<BookshelfItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user: currentUser } = useAuthStore();
@@ -30,11 +29,7 @@ export default function UserBookshelfPage() {
   };
 
 
-  useEffect(() => {
-    fetchUserBookshelf();
-  }, [id, status]);
-
-  const fetchUserBookshelf = async () => {
+  const fetchUserBookshelf = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -51,7 +46,11 @@ export default function UserBookshelfPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, status]);
+
+  useEffect(() => {
+    fetchUserBookshelf();
+  }, [fetchUserBookshelf]);
 
   if (loading) {
     return (
@@ -155,7 +154,7 @@ export default function UserBookshelfPage() {
               </div>
               <div>
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '0.25rem', color: '#333' }}>
-                  {user.name}'s {statusLabels[status as keyof typeof statusLabels]}
+                  {`${user.name}'s ${statusLabels[status as keyof typeof statusLabels]}`}`
                 </h1>
                 <p style={{ color: '#666', margin: 0 }}>
                   {books.length} book{books.length !== 1 ? 's' : ''}
@@ -212,7 +211,7 @@ export default function UserBookshelfPage() {
                 No books in {statusLabels[status as keyof typeof statusLabels].toLowerCase()}
               </h2>
               <p style={{ color: '#666', marginBottom: '2rem' }}>
-                {user.name} hasn't added any books to this shelf yet.
+                {`${user.name} hasn't added any books to this shelf yet.`}
               </p>
               <Link href={`/profile/${user._id}`} style={{
                 background: '#667eea',
@@ -222,7 +221,7 @@ export default function UserBookshelfPage() {
                 textDecoration: 'none',
                 fontWeight: 'bold'
               }}>
-                Back to {user.name}'s Profile
+                {`Back to ${user.name}'s Profile`}
               </Link>
             </div>
           ) : (
@@ -311,7 +310,7 @@ export default function UserBookshelfPage() {
                       color: '#666',
                       fontStyle: 'italic'
                     }}>
-                      "{bookshelfItem.review}"
+                      {bookshelfItem.review}
                     </div>
                   )}
                 </div>

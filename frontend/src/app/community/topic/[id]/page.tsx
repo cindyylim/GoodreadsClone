@@ -1,39 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/utils/auth';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Topic, User, Post } from '@/types';
+import { Topic, Post } from '@/types';
 import { useParams } from 'next/navigation';
 
 export default function TopicPage() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [postingReply, setPostingReply] = useState(false);
   const { user } = useAuthStore();
   const routeParams = useParams();
   const id = routeParams.id as string;
 
-  useEffect(() => {
-    fetchTopic();
-  }, [id]);
-
-  const fetchTopic = async () => {
+  const fetchTopic = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const response = await api.get(`/topics/${id}`);
       setTopic(response.data);
     } catch (error: unknown) {
-      setError('Failed to load topic. Please try again.');
       console.error('Error fetching topic:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchTopic();
+  }, [fetchTopic]);
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();

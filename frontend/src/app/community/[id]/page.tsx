@@ -23,7 +23,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   useEffect(() => {
     async function fetchData() {

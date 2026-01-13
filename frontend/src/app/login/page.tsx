@@ -36,7 +36,8 @@ export default function Login() {
       // Redirect to books page
       router.push('/books');
     } catch (error: unknown) {
-      setError((error as any).response?.data?.message || 'Login failed. Please try again.');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,7 +171,7 @@ export default function Login() {
           borderTop: '1px solid #eee'
         }}>
           <p style={{ color: '#666', margin: 0 }}>
-            Don't have an account?{' '}
+            {"Don't have an account?"}
             <Link href="/signup" style={{
               color: '#667eea',
               textDecoration: 'none',
