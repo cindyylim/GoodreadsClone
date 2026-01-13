@@ -34,8 +34,8 @@ export default function Signup() {
 
       login(response.data.user);
 
-      // Redirect to verify email page
-      router.push('/verify-email');
+      // Redirect to home page
+      router.push('/');
     } catch (error: unknown) {
       setError((error as any).response?.data?.message || 'Signup failed. Please try again.');
     } finally {

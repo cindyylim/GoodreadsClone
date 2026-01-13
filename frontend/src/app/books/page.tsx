@@ -354,16 +354,27 @@ export default function Books() {
                     <div style={{
                       width: '100%',
                       height: '200px',
-                      background: book.coverUrl || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       borderRadius: '0.5rem',
                       marginBottom: '1rem',
+                      overflow: 'hidden',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '3rem'
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
-                      {book.coverUrl ? '' : '📖'}
+                      {book.coverUrl ? (
+                        <img
+                          src={book.coverUrl}
+                          alt={book.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      ) : (
+                        <span style={{ color: 'white', fontSize: '3rem' }}>📖</span>
+                      )}
                     </div>
 
                     <h3 style={{

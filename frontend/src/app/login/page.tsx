@@ -141,15 +141,6 @@ export default function Login() {
               }}
               placeholder="Enter your password"
             />
-            <p style={{ color: '#666', margin: 0 }}>
-              <Link href="/forgot-password" style={{
-                color: '#667eea',
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}>
-                Forgot Password?
-              </Link>
-            </p>
           </div>
 
           <button

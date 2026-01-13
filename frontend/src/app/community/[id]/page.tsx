@@ -20,7 +20,7 @@ export default function CommunityPage() {
   const [creatingTopic, setCreatingTopic] = useState(false);
   const routeParams = useParams();
   const id = routeParams.id as string;
-  
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -81,8 +81,8 @@ export default function CommunityPage() {
   // Slice the topics based on the current page
   const currentTopics = topics.slice(indexOfFirstTopic, indexOfLastTopic);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(totalTopics / topicsPerPage);
+  // Calculate total pages (at least 1 to avoid "1 of 0" display)
+  const totalPages = Math.max(1, Math.ceil(totalTopics / topicsPerPage));
 
 
   if (!group) return <div>Loading...</div>;

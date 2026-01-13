@@ -11,10 +11,6 @@ const bookSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  isbn: {
-    type: String,
-    trim: true
-  },
   coverUrl: {
     type: String,
     default: ''
