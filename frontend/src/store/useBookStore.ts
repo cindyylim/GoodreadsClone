@@ -19,6 +19,10 @@ interface BookState {
   addBook: (book: Book) => void;
   updateBook: (id: string, book: Partial<Book>) => void;
   removeBook: (id: string) => void;
+  externalBooks: Book[];
+  loadingExternal: boolean;
+  searchExternalBooks: (query: string) => Promise<void>;
+  clearExternalBooks: () => void;
 }
 
 export const useBookStore = create<BookState>((set) => ({
@@ -29,7 +33,10 @@ export const useBookStore = create<BookState>((set) => ({
   page: 1,
   totalPages: 1,
   totalBooks: 0,
-  
+
+  externalBooks: [] as Book[],
+  loadingExternal: false,
+
   setBooks: (books: Book[]) => set({ books }),
   setLoading: (loading: boolean) => set({ loading }),
   setError: (error: string) => set({ error }),
@@ -37,18 +44,32 @@ export const useBookStore = create<BookState>((set) => ({
   setPage: (page: number) => set({ page }),
   setTotalPages: (totalPages: number) => set({ totalPages }),
   setTotalBooks: (totalBooks: number) => set({ totalBooks }),
-  
+
   addBook: (book: Book) => set((state) => ({
     books: [...state.books, book]
   })),
-  
+
   updateBook: (id: string, updatedBook: Partial<Book>) => set((state) => ({
     books: state.books.map(book =>
       book._id === id ? { ...book, ...updatedBook } : book
     )
   })),
-  
+
   removeBook: (id: string) => set((state) => ({
     books: state.books.filter(book => book._id !== id)
-  }))
+  })),
+
+  searchExternalBooks: async (query: string) => {
+    set({ loadingExternal: true, error: '' });
+    try {
+      const { api } = await import('@/utils/auth'); // Dynamic import to avoid circular dep if any, or just standard import usage context
+      const response = await api.get(`/books/search/external?q=${encodeURIComponent(query)}`);
+      set({ externalBooks: response.data, loadingExternal: false });
+    } catch (error) {
+      console.error('External search error:', error);
+      set({ error: 'Failed to search Google Books', loadingExternal: false });
+    }
+  },
+
+  clearExternalBooks: () => set({ externalBooks: [] })
 }));

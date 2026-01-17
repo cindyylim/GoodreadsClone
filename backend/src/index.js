@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { serialize, parse } from "cookie";
+import axios from 'axios';
 
 dotenv.config();
 import { connectDB } from './db.js';
@@ -441,6 +442,39 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
+app.post('/api/books/import', async (req, res) => {
+  try {
+    const { googleId, title, author, coverUrl, description, publishedYear } = req.body;
+
+    // Check if book already exists
+    let book = await Book.findOne({ googleId });
+    if (book) {
+      // Update missing or zero rating if new data has it
+      if (req.body.averageRating && (!book.averageRating || book.averageRating === 0)) {
+        book.averageRating = req.body.averageRating;
+        await book.save();
+      }
+      return res.json(book);
+    }
+
+    // Create new book
+    book = new Book({
+      googleId,
+      title,
+      author,
+      coverUrl,
+      description,
+      publishedYear,
+      averageRating: req.body.averageRating || 0
+    });
+
+    await book.save();
+    res.status(201).json(book);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 app.get('/api/books/:id', async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -450,6 +484,38 @@ app.get('/api/books/:id', async (req, res) => {
     res.json(book);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Google Books External Search
+app.get('/api/books/search/external', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: 'Query parameter "q" is required' });
+    }
+
+    const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}`;
+    const response = await axios.get(googleBooksUrl);
+
+    const books = (response.data.items || []).map(item => {
+      const volumeInfo = item.volumeInfo || {};
+      return {
+        _id: item.id, // Use Google ID as temporary ID
+        title: volumeInfo.title || 'Unknown Title',
+        author: (volumeInfo.authors || []).join(', ') || 'Unknown Author',
+        description: volumeInfo.description || '',
+        coverUrl: volumeInfo.imageLinks?.thumbnail || '',
+        publishedYear: volumeInfo.publishedDate ? new Date(volumeInfo.publishedDate).getFullYear() : null,
+        averageRating: volumeInfo.averageRating || 0,
+        isExternal: true
+      };
+    });
+
+    res.json(books);
+  } catch (error) {
+    console.error('Google Books API error:', error.message);
+    res.status(500).json({ message: 'Error fetching from Google Books' });
   }
 });
 

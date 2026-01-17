@@ -18,6 +18,7 @@ export interface Book {
   publishedYear?: number;
   addedToShelf?: boolean;
   shelfStatus?: string;
+  isExternal?: boolean;
 }
 
 export interface BookshelfItem {

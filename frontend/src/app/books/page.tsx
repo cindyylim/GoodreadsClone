@@ -32,7 +32,10 @@ export default function Books() {
     setSearchTerm,
     setPage,
     setTotalPages,
-    setTotalBooks
+    setTotalBooks,
+    externalBooks,
+    loadingExternal,
+    searchExternalBooks,
   } = useBookStore();
   const [addingToShelf, setAddingToShelf] = useState<string | null>(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState<string | null>(null);
@@ -89,29 +92,53 @@ export default function Books() {
     logout();
   };
 
-  const handleAddToShelf = async (bookId: string, status: string) => {
+  const handleAddToShelf = async (book: Book, status: string) => {
     if (!user) {
       setError('Please log in to add books to your shelf.');
       return;
     }
 
-    setAddingToShelf(bookId);
+    setAddingToShelf(book._id);
     setShowStatusDropdown(null);
 
     try {
+      let targetBookId = book._id;
+
+      // If it's an external book, import it first
+      if (book.isExternal) {
+        try {
+          const importResponse = await api.post('/books/import', {
+            googleId: book._id, // For external books, _id is currently the Google ID
+            title: book.title,
+            author: book.author,
+            coverUrl: book.coverUrl,
+            description: book.description,
+            publishedYear: book.publishedYear,
+            averageRating: book.averageRating
+          });
+          targetBookId = importResponse.data._id;
+        } catch (importError) {
+          console.error('Error importing book:', importError);
+          throw new Error('Failed to import book details');
+        }
+      }
+
       await api.post('/users/bookshelf', {
-        bookId,
+        bookId: targetBookId,
         status
       });
 
-      // Refetch books to update shelf status
+      // Refetch books to update shelf status - might need to refresh external books status too if we were to track it
       await fetchBooks(page);
+
+      // If we added an external book, we might want to show some feedback. 
+      // For now, simpler is better.
 
       setError('');
     } catch (error: unknown) {
       console.error('Add to shelf error:', error);
-      const axiosError = error as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to add book to shelf.');
+      const axiosError = error as { response?: { data?: { message?: string } }, message?: string };
+      setError(axiosError.response?.data?.message || axiosError.message || 'Failed to add book to shelf.');
     } finally {
       setAddingToShelf(null);
     }
@@ -319,6 +346,233 @@ export default function Books() {
             </div>
           )}
 
+          {/* External Search Section */}
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            {searchTerm && (
+              <button
+                onClick={() => searchExternalBooks(searchTerm)}
+                disabled={loadingExternal}
+                style={{
+                  background: '#fff',
+                  color: '#667eea',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '2rem',
+                  fontWeight: 'bold',
+                  cursor: loadingExternal ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {loadingExternal ? 'Searching Google Books...' : 'Search Google Books'}
+                {!loadingExternal && <span>🔍</span>}
+              </button>
+            )}
+          </div>
+
+          {externalBooks.length > 0 && (
+            <div style={{ marginBottom: '3rem' }}>
+              <h2 style={{ color: 'white', marginBottom: '1.5rem', fontSize: '1.5rem' }}>Results from Google Books</h2>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '2rem'
+              }}>
+                {externalBooks.map((book) => (
+                  <div key={book._id} style={{
+                    background: 'white',
+                    borderRadius: '1rem',
+                    padding: '1.5rem',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    transition: 'transform 0.2s',
+                    position: 'relative'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      background: '#4285F4',
+                      color: 'white',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 'bold'
+                    }}>
+                      GOOGLE BOOKS
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '200px',
+                      borderRadius: '0.5rem',
+                      marginBottom: '1rem',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    }}>
+                      {book.coverUrl ? (
+                        <img
+                          src={book.coverUrl}
+                          alt={book.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      ) : (
+                        <span style={{ color: 'white', fontSize: '3rem' }}>📖</span>
+                      )}
+                    </div>
+
+                    <h3 style={{
+                      fontSize: '1.25rem',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: 'bold'
+                    }}>
+                      {book.title}
+                    </h3>
+
+                    <p style={{
+                      color: '#666',
+                      marginBottom: '1rem',
+                      fontSize: '0.9rem'
+                    }}>
+                      by {book.author}
+                    </p>
+
+                    {book.description && (
+                      <p style={{
+                        color: '#555',
+                        fontSize: '0.9rem',
+                        lineHeight: '1.5',
+                        marginBottom: '1rem'
+                      }}>
+                        {book.description.length > 100
+                          ? `${book.description.substring(0, 100)}...`
+                          : book.description
+                        }
+                      </p>
+                    )}
+
+                    {book.averageRating !== undefined && book.averageRating > 0 && (
+                      <div style={{ color: '#f39c12', fontWeight: 'bold', marginBottom: '1rem' }}>
+                        ⭐ {book.averageRating.toFixed(1)}
+                      </div>
+                    )}
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ position: 'relative' }}>
+                        <div data-button={book._id}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowStatusDropdown(showStatusDropdown === book._id ? null : book._id);
+                            }}
+                            disabled={addingToShelf === book._id}
+                            style={{
+                              background: addingToShelf === book._id ? '#ccc' : '#667eea',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '0.5rem',
+                              cursor: addingToShelf === book._id ? 'not-allowed' : 'pointer',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            {addingToShelf === book._id ? 'Adding...' : 'Add to Shelf'}
+                          </button>
+                          {showStatusDropdown === book._id && (
+                            <div
+                              data-dropdown={book._id}
+                              style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                background: 'white',
+                                border: '1px solid #ddd',
+                                borderRadius: '0.5rem',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                zIndex: 1000,
+                                minWidth: '150px'
+                              }}
+                            >
+                              <div style={{ padding: '0.5rem', borderBottom: '1px solid #eee', background: '#f8f9fa' }}>
+                                Select status:
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToShelf(book, 'want-to-read');
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem 1rem',
+                                  border: 'none',
+                                  background: 'none',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  fontSize: '0.9rem',
+                                  display: 'block'
+                                }}
+                              >
+                                📖 Want to Read
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToShelf(book, 'currently-reading');
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem 1rem',
+                                  border: 'none',
+                                  background: 'none',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  fontSize: '0.9rem',
+                                  display: 'block'
+                                }}
+                              >
+                                📚 Currently Reading
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToShelf(book, 'read');
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem 1rem',
+                                  border: 'none',
+                                  background: 'none',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  fontSize: '0.9rem',
+                                  display: 'block'
+                                }}
+                              >
+                                ✅ Read
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {filteredBooks.length === 0 ? (
             <div style={{
               textAlign: 'center',
@@ -490,7 +744,7 @@ export default function Books() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleAddToShelf(book._id, 'want-to-read');
+                                    handleAddToShelf(book, 'want-to-read');
                                   }}
                                   style={{
                                     width: '100%',
@@ -508,7 +762,7 @@ export default function Books() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleAddToShelf(book._id, 'currently-reading');
+                                    handleAddToShelf(book, 'currently-reading');
                                   }}
                                   style={{
                                     width: '100%',
@@ -526,7 +780,7 @@ export default function Books() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleAddToShelf(book._id, 'read');
+                                    handleAddToShelf(book, 'read');
                                   }}
                                   style={{
                                     width: '100%',

@@ -6,6 +6,11 @@ const bookSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   author: {
     type: String,
     required: true,
